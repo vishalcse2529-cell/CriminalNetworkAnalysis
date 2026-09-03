@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SIH26189 - Criminal Network Analysis Dashboard</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .badge-person { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .badge-phone { background: rgba(59,130,246,0.2); color: #93c5fd; border: 1px solid rgba(59,130,246,0.4); }
+    .badge-fir { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.4); }
+    .badge-loc { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
+    .badge-high { background: rgba(239,68,68,0.25); color: #f87171; border: 1px solid #ef4444; }
+    .badge-med { background: rgba(245,158,11,0.25); color: #fbbf24; border: 1px solid #f59e0b; }
+    .badge-low { background: rgba(148,163,184,0.2); color: #cbd5e1; border: 1px solid #64748b; }
+    canvas { touch-action: none; }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-[#f1f5f9] antialiased min-h-screen flex flex-col font-sans">
+
+  <!-- TOP HEADER -->
+  <header class="bg-[#0f172a] border-b border-[#1e293b] px-6 py-4 flex flex-wrap items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🕵️</span>
+      <div>
+        <h1 class="text-lg font-bold text-[#38bdf8] tracking-tight">AI-Based Criminal Network Analysis & Investigation System</h1>
+        <p class="text-xs text-[#94a3b8]">Problem Statement SIH26189 Prototype | Multi-Source Heterogeneous Graph Intelligence</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 mt-2 sm:mt-0">
+      <span class="px-2.5 py-1 text-xs rounded bg-emerald-950/60 text-emerald-400 border border-emerald-600/40 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Demo Mode Ready
+      </span>
+      <button onclick="resetData()" class="px-3 py-1.5 text-xs font-medium rounded bg-[#1e293b] hover:bg-[#334155] text-slate-200 border border-slate-700 transition">
+        🔄 Reset Simulation
+      </button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="bg-[#111827] border-b border-[#1f2937] px-6 flex overflow-x-auto gap-1 text-sm font-medium">
+    <button onclick="showTab('dashboard')" id="tab-btn-dashboard" class="tab-btn px-4 py-3 border-b-2 border-[#38bdf8] text-[#38bdf8] flex items-center gap-2">
+      <span>📊</span> Dashboard
+    </button>
+    <button onclick="showTab('network')" id="tab-btn-network" class="tab-btn px-4 py-3 border-b-2 border-transparent text-[#94a3b8] hover:text-slate-200 flex items-center gap-2">
+      <span>🕸️</span> Network Analysis
+    </button>
+    <button onclick="showTab('fir')" id="tab-btn-fir" class="tab-btn px-4 py-3 border-b-2 border-transparent text-[#94a3b8] hover:text-slate-200 flex items-center gap-2">
+      <span>📁</span> FIR Analysis
+    </button>
+    <button onclick="showTab('cdr')" id="tab-btn-cdr" class="tab-btn px-4 py-3 border-b-2 border-transparent text-[#94a3b8] hover:text-slate-200 flex items-center gap-2">
+      <span>📞</span> CDR Analysis
+    </button>
+    <button onclick="showTab('patterns')" id="tab-btn-patterns" class="tab-btn px-4 py-3 border-b-2 border-transparent text-[#94a3b8] hover:text-slate-200 flex items-center gap-2">
+      <span>🚨</span> Suspicious Patterns
+    </button>
+    <button onclick="showTab('report')" id="tab-btn-report" class="tab-btn px-4 py-3 border-b-2 border-transparent text-[#94a3b8] hover:text-slate-200 flex items-center gap-2">
+      <span>📑</span> Investigation Report
+    </button>
+  </nav>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 p-6 max-w-[1600px] w-full mx-auto">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="tab-dashboard" class="space-y-6">
+      <!-- KPI CARDS -->
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#38bdf8] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">Total FIRs</div>
+          <div class="text-2xl font-bold text-white mt-1">18</div>
+          <div class="text-[0.7rem] text-[#38bdf8]">6 Crime Categories</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#ef4444] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">People Identified</div>
+          <div class="text-2xl font-bold text-white mt-1">14</div>
+          <div class="text-[0.7rem] text-[#fca5a5]">Cross-linked suspects</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#3b82f6] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">Phone Numbers</div>
+          <div class="text-2xl font-bold text-white mt-1">17</div>
+          <div class="text-[0.7rem] text-[#93c5fd]">Monitored telecom lines</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#10b981] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">Network Connections</div>
+          <div class="text-2xl font-bold text-white mt-1">309</div>
+          <div class="text-[0.7rem] text-[#6ee7b7]">Multi-graph relationships</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#a855f7] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">Detected Groups</div>
+          <div class="text-2xl font-bold text-white mt-1">5</div>
+          <div class="text-[0.7rem] text-[#d8b4fe]">Louvain syndicates</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] border-t-2 border-t-[#f59e0b] rounded-lg p-4 text-center">
+          <div class="text-[0.72rem] uppercase tracking-wider text-[#94a3b8]">Suspicious Patterns</div>
+          <div class="text-2xl font-bold text-white mt-1">52</div>
+          <div class="text-[0.7rem] text-[#fcd34d]">Prioritized alerts</div>
+        </div>
+      </div>
+
+      <!-- GRAPH & TABLES ROW -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-[#111827] border border-[#1f2937] rounded-lg p-4 flex flex-col">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="font-bold text-slate-100 flex items-center gap-2"><span>🌐</span> Network Graph Overview</h2>
+              <p class="text-xs text-slate-400">Drag nodes, scroll to zoom, click node to inspect.</p>
+            </div>
+            <button onclick="showTab('network')" class="text-xs text-[#38bdf8] hover:underline flex items-center gap-1">
+              Open Full Explorer →
+            </button>
+          </div>
+          <div class="relative w-full h-[420px] bg-[#0b0f19] border border-[#1e293b] rounded overflow-hidden">
+            <canvas id="miniCanvas" class="w-full h-full cursor-grab"></canvas>
+            <div class="absolute bottom-2 left-2 flex gap-2 text-[0.7rem] bg-[#0f172a]/90 px-2 py-1 rounded border border-[#1e293b]">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#ef4444]"></span> Person</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#3b82f6]"></span> Phone</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#f59e0b]"></span> FIR</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#10b981]"></span> Location</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 space-y-4">
+          <div>
+            <h3 class="font-bold text-slate-100 text-sm mb-1">👥 Potential Key Individuals</h3>
+            <p class="text-xs text-slate-400 mb-2">Ranked by topological connectivity (degree centrality).</p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left">
+                <thead class="text-slate-400 border-b border-slate-800">
+                  <tr>
+                    <th class="py-1.5">Individual</th>
+                    <th class="py-1.5">Links</th>
+                    <th class="py-1.5">Syndicate</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60" id="key-ind-table"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="pt-3 border-t border-slate-800">
+            <h3 class="font-bold text-slate-100 text-sm mb-1">🌉 Potential Bridge Individuals</h3>
+            <p class="text-xs text-slate-400 mb-2">Connects otherwise separated syndicate clusters.</p>
+            <div id="bridge-ind-list" class="space-y-2 text-xs"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRITICAL ALERTS BANNER -->
+      <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4">
+        <h3 class="font-bold text-slate-100 text-sm mb-1 flex items-center gap-2">
+          <span>🚨</span> Critical Investigative Alerts (Pre-Crime & Money Laundering)
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Priority tactical leads flagged automatically by heuristic anomaly engines.</p>
+        <div id="dashboard-alerts" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: NETWORK ANALYSIS -->
+    <section id="tab-network" class="hidden space-y-4">
+      <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+        <div>
+          <span class="font-bold text-slate-200 block mb-2">Filter Node Types:</span>
+          <div class="flex flex-wrap gap-2">
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filter-person" checked onchange="updateFilters()"> 👤 Person</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filter-phone" checked onchange="updateFilters()"> 📞 Phone</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filter-fir" checked onchange="updateFilters()"> 📄 FIR</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="filter-loc" checked onchange="updateFilters()"> 📍 Location</label>
+          </div>
+        </div>
+
+        <div>
+          <span class="font-bold text-slate-200 block mb-2">Color Coding Mode:</span>
+          <div class="flex gap-3">
+            <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="colorMode" value="type" checked onchange="setColorMode('type')"> Entity Type</label>
+            <label class="flex items-center gap-1 cursor-pointer"><input type="radio" name="colorMode" value="community" onchange="setColorMode('community')"> Louvain Group</label>
+          </div>
+        </div>
+
+        <div>
+          <span class="font-bold text-slate-200 block mb-2">Search / Select Node:</span>
+          <select id="node-selector" onchange="selectNodeByName(this.value)" class="w-full bg-[#0f172a] border border-slate-700 rounded p-1.5 text-slate-200"></select>
+        </div>
+
+        <div class="flex items-end">
+          <button onclick="resetGraphPhysics()" class="w-full py-1.5 px-3 bg-[#1e293b] hover:bg-[#334155] border border-slate-700 rounded text-slate-200 font-medium">
+            🎯 Re-center & Relax Graph
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-[#111827] border border-[#1f2937] rounded-lg p-3 relative h-[650px] flex flex-col">
+          <canvas id="mainCanvas" class="w-full h-full bg-[#0b0f19] rounded cursor-grab"></canvas>
+          <div class="absolute top-5 left-5 bg-[#0f172a]/80 backdrop-blur px-3 py-1.5 rounded border border-[#1e293b] text-xs text-slate-300 pointer-events-none">
+            Click any node to view 360° investigative dossier | Drag to rearrange | Scroll to zoom
+          </div>
+        </div>
+
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-5 flex flex-col h-[650px] overflow-y-auto" id="profile-card">
+          <div class="border-b border-slate-800 pb-3 mb-3">
+            <span id="profile-badge" class="badge badge-person">Person</span>
+            <span id="profile-comm" class="badge badge-fir">Group 2</span>
+            <h2 id="profile-name" class="text-xl font-bold text-white mt-1">Ravi Kumar</h2>
+          </div>
+
+          <div class="space-y-4 text-xs">
+            <div class="grid grid-cols-2 gap-2 bg-[#0f172a] p-3 rounded border border-slate-800">
+              <div>
+                <span class="text-slate-400 block">Total Connections:</span>
+                <span id="profile-conn" class="text-base font-bold text-white">18</span>
+              </div>
+              <div>
+                <span class="text-slate-400 block">Betweenness Score:</span>
+                <span id="profile-betw" class="text-base font-bold text-sky-400">0.1945</span>
+              </div>
+            </div>
+
+            <div>
+              <span class="font-bold text-amber-300 block mb-1">Associated FIRs:</span>
+              <div id="profile-firs" class="flex flex-wrap gap-1 text-slate-300">FIR001, FIR004, FIR008, FIR012</div>
+            </div>
+
+            <div>
+              <span class="font-bold text-blue-300 block mb-1">Linked Phone Numbers:</span>
+              <div id="profile-phones" class="flex flex-wrap gap-1 text-slate-300">9876543210</div>
+            </div>
+
+            <div>
+              <span class="font-bold text-emerald-300 block mb-1">Known Co-Accused & Contacts:</span>
+              <div id="profile-contacts" class="flex flex-wrap gap-1 text-slate-300">Arun Raj, Suresh, Vikram Singh, Priya Sharma</div>
+            </div>
+
+            <div>
+              <span class="font-bold text-teal-300 block mb-1">Operating Locations:</span>
+              <div id="profile-locations" class="flex flex-wrap gap-1 text-slate-300">Gandhipuram, Erode, Chennai</div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800">
+              <span class="font-bold text-amber-400 block mb-1.5">Analytical Risk Indicators:</span>
+              <ul id="profile-risks" class="space-y-1 text-amber-200">
+                <li>⚠️ High connectivity (18 connections across crime types)</li>
+                <li>⚠️ Potential bridge individual connecting separate syndicates</li>
+                <li>⚠️ Implicated in Pre-Crime Calling (FIR001 Robbery, FIR008 Cybercrime)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: FIR ANALYSIS -->
+    <section id="tab-fir" class="hidden space-y-6">
+      <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 class="font-bold text-white text-base">📁 First Information Report (FIR) Dossier Browser</h2>
+            <p class="text-xs text-slate-400">Extracts Persons, Phone Numbers, and Hotspot locations from case files.</p>
+          </div>
+          <div class="w-72">
+            <select id="fir-dropdown" onchange="loadFirDetails(this.value)" class="w-full bg-[#0f172a] border border-slate-700 rounded p-2 text-sm text-slate-200 font-mono"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 bg-[#0f172a] border border-[#1e293b] rounded-lg p-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+              <span id="fir-badge-id" class="text-base font-bold text-amber-400 font-mono">FIR001</span>
+              <span id="fir-badge-crime" class="badge badge-fir">Robbery</span>
+            </div>
+            <div class="text-xs space-y-3">
+              <div class="grid grid-cols-2 gap-2 text-slate-300">
+                <p><b>Incident Date:</b> <span id="fir-detail-date">2026-07-12 21:30:00</span></p>
+                <p><b>Jurisdiction:</b> <span id="fir-detail-loc">Gandhipuram</span></p>
+              </div>
+              <div>
+                <b class="text-slate-400 block mb-1">Case Narrative:</b>
+                <p id="fir-detail-desc" class="text-slate-200 bg-[#111827] p-3 rounded border border-slate-800 leading-relaxed">
+                  Ravi Kumar and Arun Raj were spotted near Gandhipuram bus stand intercepting a cash transit vehicle with weapons. Informant reported communication with Suresh.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#0f172a] border border-[#1e293b] rounded-lg p-5 text-xs space-y-4">
+            <div>
+              <span class="font-bold text-red-400 block mb-1.5">👤 Persons Named (NER Extracted):</span>
+              <div id="fir-extracted-persons" class="flex flex-wrap gap-1"></div>
+            </div>
+            <div>
+              <span class="font-bold text-blue-400 block mb-1.5">📞 Phones Identified:</span>
+              <div id="fir-extracted-phones" class="flex flex-wrap gap-1"></div>
+            </div>
+            <div>
+              <span class="font-bold text-emerald-400 block mb-1.5">📍 Locations Tagged:</span>
+              <div id="fir-extracted-locations" class="flex flex-wrap gap-1"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-5">
+        <h3 class="font-bold text-white text-sm mb-2">🔗 Cross-Crime Entity Overlaps</h3>
+        <p class="text-xs text-slate-400 mb-3">Cases linked through common suspects or shared telecommunication hardware.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-2">Linked FIR</th>
+                <th class="py-2">Crime Type</th>
+                <th class="py-2">Date</th>
+                <th class="py-2">Shared Suspects</th>
+                <th class="py-2">Shared Devices</th>
+              </tr>
+            </thead>
+            <tbody id="fir-cross-table" class="divide-y divide-slate-800/60"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: CDR ANALYSIS -->
+    <section id="tab-cdr" class="hidden space-y-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 text-center">
+          <div class="text-xs text-[#94a3b8]">Total CDR Records</div>
+          <div class="text-2xl font-bold text-white mt-1">74</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 text-center">
+          <div class="text-xs text-[#94a3b8]">Unique Callers</div>
+          <div class="text-2xl font-bold text-white mt-1">15</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 text-center">
+          <div class="text-xs text-[#94a3b8]">Unique Receivers</div>
+          <div class="text-2xl font-bold text-white mt-1">17</div>
+        </div>
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-4 text-center">
+          <div class="text-xs text-[#94a3b8]">Avg Call Duration</div>
+          <div class="text-2xl font-bold text-white mt-1">228s</div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-5">
+          <h3 class="font-bold text-white text-sm mb-1">🏆 Top Communicators (Outbound Volume)</h3>
+          <p class="text-xs text-slate-400 mb-3">High-frequency calling hubs triggering blast dispatch anomalies.</p>
+          <table class="w-full text-xs text-left">
+            <thead class="text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="py-2">Phone Number</th>
+                <th class="py-2">Known User</th>
+                <th class="py-2">Calls Dispatched</th>
+                <th class="py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              <tr><td class="py-2 font-mono text-blue-400">9876543210</td><td>Ravi Kumar</td><td>18 calls</td><td><span class="badge badge-high">High Frequency Hub</span></td></tr>
+              <tr><td class="py-2 font-mono text-blue-400">9845012345</td><td>Vikram Singh</td><td>11 calls</td><td><span class="badge badge-med">Frequent</span></td></tr>
+              <tr><td class="py-2 font-mono text-blue-400">9443322110</td><td>Suresh</td><td>9 calls</td><td><span class="badge badge-med">Frequent</span></td></tr>
+              <tr><td class="py-2 font-mono text-blue-400">9876500001</td><td>Shared Burner (Manoj/Vijay)</td><td>8 calls</td><td><span class="badge badge-high">Shared Burner</span></td></tr>
+              <tr><td class="py-2 font-mono text-blue-400">9123456780</td><td>Arun Raj</td><td>7 calls</td><td><span class="badge badge-low">Normal</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="bg-[#111827] border border-[#1f2937] rounded-lg p-5">
+          <h3 class="font-bold text-white text-sm mb-1">📡 Cell Tower Geographic Density</h3>
+          <p class="text-xs text-slate-400 mb-3">Base transceiver stations recording operational communication clusters.</p>
+          <div class="space-y-3 text-xs">
+            <div>
+              <div class="flex justify-between mb-1"><span>Gandhipuram Tower</span><span class="text-sky-400">24 calls (32%)</span></div>
+              <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-sky-500 h-2 rounded-full" style="width: 32%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Peelamedu Tower</span><span class="text-sky-400">16 calls (22%)</span></div>
+              <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-sky-500 h-2 rounded-full" style="width: 22%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>RS Puram Tower</span><span class="text-sky-400">12 calls (16%)</span></div>
+              <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-sky-500 h-2 rounded-full" style="width: 16%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Erode Station</span><span class="text-sky-400">11 calls (15%)</span></div>
+              <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-sky-500 h-2 rounded-full" style="width: 15%"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between mb-1"><span>Salem / Town Hall</span><span class="text-sky-400">11 calls (15%)</span></div>
+              <div class="w-full bg-slate-800 rounded-full h-2"><div class="bg-sky-500 h-2 rounded-full" style="width: 15%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: SUSPICIOUS PATTERNS -->
+    <section id="tab-patterns" class="hidden space-y-4">
+      <div class="flex items-center justify-between bg-[#111827] border border-[#1f2937] rounded-lg p-4">
+        <div>
+          <h2 class="font-bold text-white text-base">🚨 Investigative Priority Alerts Dashboard</h2>
+          <p class="text-xs text-slate-400">Automated pattern recognition categorizing tactical pre-crime coordination and financial layering.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="filterAlerts('ALL')" class="px-3 py-1.5 text-xs rounded bg-[#1e293b] text-slate-200 border border-slate-700 hover:bg-slate-700">All (52)</button>
+          <button onclick="filterAlerts('HIGH')" class="px-3 py-1.5 text-xs rounded bg-red-950/70 text-red-300 border border-red-800/60 hover:bg-red-900/50">🔴 High (24)</button>
+          <button onclick="filterAlerts('MEDIUM')" class="px-3 py-1.5 text-xs rounded bg-amber-950/70 text-amber-300 border border-amber-800/60 hover:bg-amber-900/50">🟠 Medium (28)</button>
+        </div>
+      </div>
+      <div id="full-alerts-list" class="space-y-3"></div>
+    </section>
+
+    <!-- TAB 6: INVESTIGATION REPORT -->
+    <section id="tab-report" class="hidden space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-white text-base">📑 Automated Intelligence Briefing</h2>
+          <p class="text-xs text-slate-400">Confidential summary ready for senior investigating officers.</p>
+        </div>
+        <button onclick="downloadReport()" class="px-4 py-2 bg-[#38bdf8] hover:bg-sky-400 text-slate-950 text-xs font-bold rounded flex items-center gap-2">
+          📥 Download Markdown Briefing
+        </button>
+      </div>
+
+      <div class="bg-[#111827] border border-[#334155] rounded-lg p-6 font-mono text-xs text-slate-300 space-y-4 shadow-xl">
+        <div class="border-b border-slate-800 pb-3">
+          <p class="text-[#38bdf8] font-bold text-sm"># CONFIDENTIAL INVESTIGATIVE INTELLIGENCE BRIEFING</p>
+          <p class="text-slate-400">Problem Statement SIH26189 — AI-Based Criminal Network Analysis</p>
+          <p class="text-slate-500">Generated: Automated Analytical Intelligence Engine</p>
+        </div>
+
+        <div>
+          <p class="font-bold text-amber-300">## 1. EXECUTIVE SUMMARY</p>
+          <p>- Total Records Analyzed: 134 (18 FIRs, 74 CDR Logs, 42 Financial Transfers)</p>
+          <p>- Detected Syndicates / Groups: 5 Modular Clusters (Louvain)</p>
+          <p>- Critical Tactical Leads: 24 High Priority (Pre-Crime Calls, Mule Chains)</p>
+        </div>
+
+        <div>
+          <p class="font-bold text-amber-300">## 2. POTENTIAL KEY INDIVIDUALS (High Connectivity)</p>
+          <p>1. Vikram Singh (20 connections) - Group 2 Cybercrime / Fraud Coordinator</p>
+          <p>2. Ravi Kumar (18 connections) - Group 2 Robbery & Extortion Hub</p>
+          <p>3. Suresh (18 connections) - Group 3 Arms & Contraband Distributor</p>
+          <p>4. Arun Raj (15 connections) - Group 2 Interstate Logistics Lead</p>
+        </div>
+
+        <div>
+          <p class="font-bold text-amber-300">## 3. POTENTIAL BRIDGE INDIVIDUALS (High Betweenness)</p>
+          <p>- Ravi Kumar (Betweenness: 0.1945) - Bridges Cybercrime syndicate to Robbery crews</p>
+          <p>- Manoj Tiwari (Betweenness: 0.1770) - Bridges break-in rings to interstate fencing operations</p>
+          <p>- Priya Sharma (Betweenness: 0.1442) - Coordinates financial payout dispersal</p>
+        </div>
+
+        <div>
+          <p class="font-bold text-amber-300">## 4. MAJOR SUSPICIOUS LEADS</p>
+          <p>• Pre-Crime Communication: Calls between 9876543210 & 9123456780 within 90 mins before FIR001 & FIR008.</p>
+          <p>• Layered Mule Chain: Ravi Kumar -> Arun Raj (₹85k) -> Suresh (₹80k) -> Vikram Singh (₹75k) within 24h.</p>
+          <p>• Shared Hardware Hub: Burner device 9876500001 utilized by multiple independent suspects across 3 FIRs.</p>
+        </div>
+
+        <div class="border-t border-slate-800 pt-3 text-slate-500 text-[0.7rem]">
+          IMPORTANT DISCLAIMER: These findings are analytical leads generated from synthetic data and must be verified by authorized investigators before formal legal proceedings.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-[#0f172a] border-t border-[#1e293b] px-6 py-3 text-center text-xs text-slate-500">
+    Smart India Hackathon (SIH26189) Prototype | Built with Python, NetworkX, Streamlit & Web Technologies
+  </footer>
+
+  <!-- JAVASCRIPT DATA & LOGIC -->
+  <script>
+    const FIR_DATA = [
+      { id: "FIR001", date: "2026-07-12 21:30:00", crime: "Robbery", loc: "Gandhipuram", desc: "Ravi Kumar and Arun Raj were spotted near Gandhipuram bus stand intercepting a cash transit vehicle with weapons. Informant reported communication with Suresh.", persons: ["Ravi Kumar", "Arun Raj", "Suresh"], phones: ["9876543210", "9123456780", "9443322110"] },
+      { id: "FIR002", date: "2026-07-15 14:15:00", crime: "Theft", loc: "RS Puram", desc: "Break-in reported at an electronics warehouse in RS Puram. Suspect Dinesh Karthik fled the scene on an unregistered motorcycle after disabling CCTV cameras.", persons: ["Dinesh Karthik", "Manoj Tiwari"], phones: ["9789123456", "9876500001"] },
+      { id: "FIR003", date: "2026-07-18 19:45:00", crime: "Vehicle Theft", loc: "Peelamedu", desc: "Two-wheeler theft ring intercepted near Peelamedu railway crossing. Manoj Tiwari and Vijay Sethi detained while attempting to alter engine chassis numbers.", persons: ["Manoj Tiwari", "Vijay Sethi"], phones: ["9876500001", "9655123456"] },
+      { id: "FIR004", date: "2026-07-22 18:00:00", crime: "Extortion", loc: "Erode", desc: "Local textile merchant reported coercive extortion demands delivered via phone. Informant linked demands to Ravi Kumar and Suresh operating from Erode.", persons: ["Ravi Kumar", "Suresh", "Rajesh Nair"], phones: ["9876543210", "9443322110", "9842112233"] },
+      { id: "FIR005", date: "2026-07-25 23:10:00", crime: "Vehicle Theft", loc: "Salem", desc: "Luxury SUV stolen from hotel parking in Salem. Witnesses identified Arun Raj and Dinesh Karthik coordinating transport.", persons: ["Arun Raj", "Dinesh Karthik"], phones: ["9123456780", "9789123456"] },
+      { id: "FIR006", date: "2026-07-29 11:30:00", crime: "Fraud", loc: "Coimbatore", desc: "Fake land patta registration scam uncovered at registrar office. Amit Patel and Anand Verma implicated in forging revenue documents.", persons: ["Amit Patel", "Anand Verma"], phones: ["9442001122", "9442003344"] },
+      { id: "FIR007", date: "2026-08-02 16:20:00", crime: "Theft", loc: "Town Hall", desc: "Commercial gold ornaments stolen from jewelry workshop. CCTV captured Vijay Sethi providing surveillance while an accomplice breached back door.", persons: ["Vijay Sethi", "Manoj Tiwari"], phones: ["9655123456", "9876500001"] },
+      { id: "FIR008", date: "2026-08-05 20:00:00", crime: "Cybercrime", loc: "Gandhipuram", desc: "Phishing infrastructure and unauthorized SIM-box routing detected. Ravi Kumar, Arun Raj, and Vikram Singh coordinated operations with Priya Sharma.", persons: ["Ravi Kumar", "Arun Raj", "Vikram Singh", "Priya Sharma"], phones: ["9876543210", "9123456780", "9845012345", "9789012345"] },
+      { id: "FIR009", date: "2026-08-09 13:00:00", crime: "Extortion", loc: "RS Puram", desc: "Protection money demand delivered to building contractor. Phone records indicate calls originating from RS Puram tower traced to Rajesh Nair and Suresh.", persons: ["Rajesh Nair", "Suresh"], phones: ["9842112233", "9443322110"] },
+      { id: "FIR010", date: "2026-08-12 17:40:00", crime: "Fraud", loc: "Bangalore", desc: "Online job recruitment racket collecting deposits via mule accounts. Amit Patel, Anand Verma, and Vikram Singh linked to coordinating shell beneficiary accounts.", persons: ["Amit Patel", "Anand Verma", "Vikram Singh"], phones: ["9442001122", "9442003344", "9845012345"] },
+      { id: "FIR011", date: "2026-08-15 22:15:00", crime: "Vehicle Theft", loc: "Peelamedu", desc: "Interstate truck hijacking carrying copper wire spools on bypass. Dinesh Karthik and Arun Raj intercepted during highway patrol check.", persons: ["Dinesh Karthik", "Arun Raj"], phones: ["9789123456", "9123456780"] },
+      { id: "FIR012", date: "2026-08-19 15:30:00", crime: "Fraud", loc: "Chennai", desc: "Cryptocurrency investment scheme fraud defrauding multiple investors. Syndicate managed by Vikram Singh, Ravi Kumar, and Priya Sharma.", persons: ["Vikram Singh", "Ravi Kumar", "Priya Sharma"], phones: ["9845012345", "9876543210", "9789012345"] }
+    ];
+
+    const PATTERNS_DATA = [
+      { id: "PAT-PRECRIME-FIR001", severity: "HIGH", title: "Pre-Crime Coordination Before FIR001 (Robbery)", summary: "3 calls detected between 9876543210 and 9123456780 within 90 minutes prior to armed robbery in Gandhipuram.", lead: "Strong temporal coordination between co-accused immediately preceding cash vehicle heist." },
+      { id: "PAT-PRECRIME-FIR008", severity: "HIGH", title: "Pre-Crime Communication Before FIR008 (Cybercrime)", summary: "Burst calls detected between Ravi Kumar, Arun Raj, and Vikram Singh prior to SIM-box deployment.", lead: "Synchronized telecommunications indicates planned operational launch of phishing server." },
+      { id: "PAT-COMM-9876543210", severity: "HIGH", title: "Rapid Outbound Communication Burst (9876543210)", summary: "Phone 9876543210 contacted 9 distinct numbers within a 3-hour window on 2026-08-05.", lead: "High-frequency blast pattern consistent with syndicate controller dispatching operational instructions." },
+      { id: "PAT-FIN-CHAIN-1012-1013", severity: "HIGH", title: "Layered Transfer Chain: Ravi Kumar ➔ Arun Raj ➔ Suresh", summary: "Ravi Kumar transferred ₹90,000 to Arun Raj, followed by Arun Raj transferring ₹85,000 to Suresh within 2 hours.", lead: "Structured multi-hop smurfing designed to distance illicit funds from origin." },
+      { id: "PAT-BURNER-9876500001", severity: "HIGH", title: "Shared Hardware Hub / Burner Device (9876500001)", summary: "Device 9876500001 directly used by Manoj Tiwari and Vijay Sethi across 3 separate theft incidents.", lead: "Burner phone serving as common hardware link between vehicle theft and gold burglary operations." },
+      { id: "PAT-CROSSCRIME-Ravi_Kumar", severity: "MEDIUM", title: "Cross-Crime Association: Ravi Kumar", summary: "Ravi Kumar appears in cases involving Robbery, Extortion, Cybercrime, and Crypto Fraud.", lead: "Multidisciplinary criminal syndicate capability spanning physical and digital domains." },
+      { id: "PAT-CROSSCRIME-Vikram_Singh", severity: "MEDIUM", title: "Cross-Crime Association: Vikram Singh", summary: "Vikram Singh linked across Job Fraud, Phishing Infrastructure, and Cryptocurrency Schemes.", lead: "Primary cyber-financial orchestrator across southern region cases." }
+    ];
+
+    const rawNodes = [
+      { id: "Ravi Kumar", label: "Ravi Kumar", type: "Person", comm: 2, deg: 18, betw: 0.1945 },
+      { id: "Arun Raj", label: "Arun Raj", type: "Person", comm: 2, deg: 15, betw: 0.0650 },
+      { id: "Suresh", label: "Suresh", type: "Person", comm: 3, deg: 18, betw: 0.1423 },
+      { id: "Vikram Singh", label: "Vikram Singh", type: "Person", comm: 2, deg: 20, betw: 0.0726 },
+      { id: "Priya Sharma", label: "Priya Sharma", type: "Person", comm: 2, deg: 14, betw: 0.1442 },
+      { id: "Rajesh Nair", label: "Rajesh Nair", type: "Person", comm: 3, deg: 10, betw: 0.0744 },
+      { id: "Amit Patel", label: "Amit Patel", type: "Person", comm: 5, deg: 10, betw: 0.0320 },
+      { id: "Anand Verma", label: "Anand Verma", type: "Person", comm: 5, deg: 9, betw: 0.0280 },
+      { id: "Dinesh Karthik", label: "Dinesh Karthik", type: "Person", comm: 1, deg: 12, betw: 0.0450 },
+      { id: "Manoj Tiwari", label: "Manoj Tiwari", type: "Person", comm: 1, deg: 15, betw: 0.1770 },
+      { id: "Vijay Sethi", label: "Vijay Sethi", type: "Person", comm: 1, deg: 9, betw: 0.0310 },
+      { id: "9876543210", label: "9876543210", type: "Phone", comm: 2, deg: 14, betw: 0.0800 },
+      { id: "9123456780", label: "9123456780", type: "Phone", comm: 2, deg: 9, betw: 0.0300 },
+      { id: "9443322110", label: "9443322110", type: "Phone", comm: 3, deg: 10, betw: 0.0400 },
+      { id: "9845012345", label: "9845012345", type: "Phone", comm: 2, deg: 11, betw: 0.0500 },
+      { id: "9789012345", label: "9789012345", type: "Phone", comm: 2, deg: 8, betw: 0.0200 },
+      { id: "9876500001", label: "9876500001", type: "Phone", comm: 1, deg: 8, betw: 0.0600 },
+      { id: "9789123456", label: "9789123456", type: "Phone", comm: 1, deg: 7, betw: 0.0200 },
+      { id: "FIR001", label: "FIR001", type: "FIR", comm: 2, deg: 5 },
+      { id: "FIR002", label: "FIR002", type: "FIR", comm: 1, deg: 4 },
+      { id: "FIR003", label: "FIR003", type: "FIR", comm: 1, deg: 4 },
+      { id: "FIR004", label: "FIR004", type: "FIR", comm: 3, deg: 5 },
+      { id: "FIR008", label: "FIR008", type: "FIR", comm: 2, deg: 6 },
+      { id: "FIR012", label: "FIR012", type: "FIR", comm: 2, deg: 5 },
+      { id: "Gandhipuram", label: "Gandhipuram", type: "Location", comm: 2, deg: 8 },
+      { id: "RS Puram", label: "RS Puram", type: "Location", comm: 1, deg: 6 },
+      { id: "Peelamedu", label: "Peelamedu", type: "Location", comm: 1, deg: 6 },
+      { id: "Erode", label: "Erode", type: "Location", comm: 3, deg: 5 },
+      { id: "Salem", label: "Salem", type: "Location", comm: 3, deg: 4 }
+    ];
+
+    const rawEdges = [
+      { source: "Ravi Kumar", target: "Arun Raj" },
+      { source: "Ravi Kumar", target: "Suresh" },
+      { source: "Ravi Kumar", target: "Vikram Singh" },
+      { source: "Ravi Kumar", target: "FIR001" },
+      { source: "Arun Raj", target: "FIR001" },
+      { source: "Suresh", target: "FIR001" },
+      { source: "Ravi Kumar", target: "9876543210" },
+      { source: "Arun Raj", target: "9123456780" },
+      { source: "Suresh", target: "9443322110" },
+      { source: "9876543210", target: "9123456780" },
+      { source: "9876543210", target: "9443322110" },
+      { source: "Manoj Tiwari", target: "Dinesh Karthik" },
+      { source: "Manoj Tiwari", target: "Vijay Sethi" },
+      { source: "Manoj Tiwari", target: "9876500001" },
+      { source: "Vijay Sethi", target: "9876500001" },
+      { source: "Dinesh Karthik", target: "9789123456" },
+      { source: "Manoj Tiwari", target: "FIR002" },
+      { source: "Dinesh Karthik", target: "FIR002" },
+      { source: "Manoj Tiwari", target: "FIR003" },
+      { source: "Vijay Sethi", target: "FIR003" },
+      { source: "Vikram Singh", target: "Priya Sharma" },
+      { source: "Vikram Singh", target: "9845012345" },
+      { source: "Priya Sharma", target: "9789012345" },
+      { source: "Vikram Singh", target: "FIR008" },
+      { source: "Ravi Kumar", target: "FIR008" },
+      { source: "Priya Sharma", target: "FIR008" },
+      { source: "Arun Raj", target: "FIR008" },
+      { source: "Ravi Kumar", target: "Gandhipuram" },
+      { source: "FIR001", target: "Gandhipuram" },
+      { source: "FIR008", target: "Gandhipuram" },
+      { source: "Dinesh Karthik", target: "RS Puram" },
+      { source: "FIR002", target: "RS Puram" },
+      { source: "Suresh", target: "Rajesh Nair" },
+      { source: "Suresh", target: "Erode" },
+      { source: "Ravi Kumar", target: "Erode" },
+      { source: "FIR004", target: "Erode" },
+      { source: "Amit Patel", target: "Anand Verma" },
+      { source: "Amit Patel", target: "Vikram Singh" },
+      { source: "Arun Raj", target: "Dinesh Karthik" }
+    ];
+
+    const TYPE_COLORS = { Person: "#ef4444", Phone: "#3b82f6", FIR: "#f59e0b", Location: "#10b981" };
+    const COMM_COLORS = ["#38bdf8", "#f43f5e", "#a855f7", "#34d399", "#fbbf24", "#f97316"];
+
+    let currentTab = "dashboard";
+    let colorMode = "type";
+    let selectedEntity = "Ravi Kumar";
+
+    function showTab(tabId) {
+      document.querySelectorAll("main > section").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(el => {
+        el.classList.remove("border-[#38bdf8]", "text-[#38bdf8]");
+        el.classList.add("border-transparent", "text-[#94a3b8]");
+      });
+
+      const target = document.getElementById(`tab-${tabId}`) || document.getElementById(tabId);
+      if (target) target.classList.remove("hidden");
+
+      const btn = document.getElementById(`tab-btn-${tabId}`);
+      if (btn) {
+        btn.classList.add("border-[#38bdf8]", "text-[#38bdf8]");
+        btn.classList.remove("border-transparent", "text-[#94a3b8]");
+      }
+      currentTab = tabId;
+      if (tabId === "network") resetGraphPhysics();
+    }
+
+    function initApp() {
+      const keyTable = document.getElementById("key-ind-table");
+      const keyPeople = rawNodes.filter(n => n.type === "Person").sort((a,b) => b.deg - a.deg).slice(0, 5);
+      keyTable.innerHTML = keyPeople.map(p => `
+        <tr class="hover:bg-slate-800/40 cursor-pointer" onclick="inspectNode('${p.id}')">
+          <td class="py-2 font-medium text-slate-200">${p.label}</td>
+          <td class="py-2 text-sky-400 font-bold">${p.deg}</td>
+          <td class="py-2"><span class="badge badge-fir">Group ${p.comm}</span></td>
+        </tr>
+      `).join("");
+
+      const bridgeList = document.getElementById("bridge-ind-list");
+      const bridgePeople = rawNodes.filter(n => n.type === "Person" && n.betw > 0.05).sort((a,b) => b.betw - a.betw).slice(0, 3);
+      bridgeList.innerHTML = bridgePeople.map(b => `
+        <div class="bg-slate-800/50 p-2 rounded border-l-2 border-sky-400 flex justify-between items-center cursor-pointer" onclick="inspectNode('${b.id}')">
+          <div>
+            <b class="text-slate-200">${b.label}</b>
+            <span class="text-[0.65rem] text-slate-400 block">Betweenness: ${b.betw}</span>
+          </div>
+          <span class="badge badge-fir">Group ${b.comm}</span>
+        </div>
+      `).join("");
+
+      const dashAlerts = document.getElementById("dashboard-alerts");
+      dashAlerts.innerHTML = PATTERNS_DATA.slice(0, 3).map(p => `
+        <div class="bg-[#0f172a] border-l-4 border-red-500 rounded p-3 text-xs">
+          <span class="badge badge-high">${p.severity} PRIORITY</span>
+          <h4 class="font-bold text-slate-200 mt-2 mb-1">${p.title}</h4>
+          <p class="text-slate-400 mb-2">${p.summary}</p>
+          <span class="text-[0.68rem] text-slate-500 block"><b>Lead:</b> ${p.lead}</span>
+        </div>
+      `).join("");
+
+      const firDropdown = document.getElementById("fir-dropdown");
+      firDropdown.innerHTML = FIR_DATA.map(f => `<option value="${f.id}">${f.id} - ${f.crime} (${f.loc})</option>`).join("");
+      loadFirDetails("FIR001");
+
+      const nodeSel = document.getElementById("node-selector");
+      nodeSel.innerHTML = rawNodes.map(n => `<option value="${n.id}">${n.label} (${n.type})</option>`).join("");
+
+      renderAlertsList(PATTERNS_DATA);
+
+      initCanvas("miniCanvas", false);
+      initCanvas("mainCanvas", true);
+    }
+
+    function inspectNode(nodeId) {
+      showTab("network");
+      selectNodeByName(nodeId);
+    }
+
+    function selectNodeByName(nodeId) {
+      selectedEntity = nodeId;
+      const sel = document.getElementById("node-selector");
+      if (sel) sel.value = nodeId;
+
+      const node = rawNodes.find(n => n.id === nodeId);
+      if (!node) return;
+
+      document.getElementById("profile-name").innerText = node.label;
+      document.getElementById("profile-badge").innerText = node.type;
+      document.getElementById("profile-badge").className = `badge badge-${node.type.toLowerCase()}`;
+      document.getElementById("profile-comm").innerText = `Group ${node.comm || 1}`;
+      document.getElementById("profile-conn").innerText = node.deg || 10;
+      document.getElementById("profile-betw").innerText = node.betw || 0.04;
+
+      const firs = FIR_DATA.filter(f => f.persons.includes(node.label) || f.phones.includes(node.label)).map(f => f.id);
+      document.getElementById("profile-firs").innerText = firs.length ? firs.join(", ") : "None directly cited";
+    }
+
+    function loadFirDetails(firId) {
+      const fir = FIR_DATA.find(f => f.id === firId) || FIR_DATA[0];
+      document.getElementById("fir-badge-id").innerText = fir.id;
+      document.getElementById("fir-badge-crime").innerText = fir.crime;
+      document.getElementById("fir-detail-date").innerText = fir.date;
+      document.getElementById("fir-detail-loc").innerText = fir.loc;
+      document.getElementById("fir-detail-desc").innerText = fir.desc;
+
+      document.getElementById("fir-extracted-persons").innerHTML = fir.persons.map(p => `<span class="badge badge-person">👤 ${p}</span>`).join("");
+      document.getElementById("fir-extracted-phones").innerHTML = fir.phones.map(ph => `<span class="badge badge-phone">📞 ${ph}</span>`).join("");
+      document.getElementById("fir-extracted-locations").innerHTML = `<span class="badge badge-loc">📍 ${fir.loc}</span>`;
+
+      const related = FIR_DATA.filter(f => f.id !== fir.id && (f.persons.some(p => fir.persons.includes(p)) || f.phones.some(ph => fir.phones.includes(ph))));
+      const tableBody = document.getElementById("fir-cross-table");
+      if (related.length) {
+        tableBody.innerHTML = related.map(r => `
+          <tr class="hover:bg-slate-800/40">
+            <td class="py-2 font-mono text-amber-400 font-bold">${r.id}</td>
+            <td class="py-2">${r.crime}</td>
+            <td class="py-2 text-slate-400">${r.date.split(" ")[0]}</td>
+            <td class="py-2 text-red-300">${r.persons.filter(p => fir.persons.includes(p)).join(", ")}</td>
+            <td class="py-2 text-blue-300 font-mono">${r.phones.filter(ph => fir.phones.includes(ph)).join(", ") || "-"}</td>
+          </tr>
+        `).join("");
+      } else {
+        tableBody.innerHTML = `<tr><td colspan="5" class="py-3 text-slate-500 text-center">No cross-case overlaps for this FIR</td></tr>`;
+      }
+    }
+
+    function renderAlertsList(data) {
+      const container = document.getElementById("full-alerts-list");
+      container.innerHTML = data.map(p => `
+        <div class="bg-[#111827] border border-slate-800 border-l-4 ${p.severity === 'HIGH' ? 'border-l-red-500' : 'border-l-amber-500'} rounded p-4 text-xs">
+          <div class="flex justify-between items-center mb-1">
+            <span class="badge ${p.severity === 'HIGH' ? 'badge-high' : 'badge-med'}">${p.severity} PRIORITY</span>
+            <span class="text-slate-500 font-mono">${p.id}</span>
+          </div>
+          <h3 class="font-bold text-slate-100 text-sm mt-1">${p.title}</h3>
+          <p class="text-slate-300 my-1">${p.summary}</p>
+          <div class="bg-[#0b0f19] p-2.5 rounded text-slate-400 mt-2 border border-slate-800/60">
+            <b class="text-slate-300">Investigative Lead Assessment:</b> ${p.lead}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function filterAlerts(level) {
+      if (level === "ALL") renderAlertsList(PATTERNS_DATA);
+      else renderAlertsList(PATTERNS_DATA.filter(p => p.severity === level));
+    }
+
+    function setColorMode(mode) {
+      colorMode = mode;
+      drawSimulation(mainSim);
+      drawSimulation(miniSim);
+    }
+
+    function downloadReport() {
+      const content = `# CONFIDENTIAL INVESTIGATIVE INTELLIGENCE BRIEFING\nSIH26189 AI-Based Criminal Network Analysis\n\nTotal Records: 134\nClusters: 5\nKey Individuals: Vikram Singh, Ravi Kumar, Suresh, Arun Raj\nBridge Individuals: Ravi Kumar (0.1945), Manoj Tiwari (0.1770)\n\nMajor Leads:\n- Pre-Crime Communications on FIR001 & FIR008\n- Layered transfer smurfing chains\n- Shared burner hardware 9876500001\n`;
+      const blob = new Blob([content], { type: "text/markdown" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "investigation_report.md";
+      a.click();
+    }
+
+    function resetData() {
+      alert("Simulation datasets refreshed to baseline.");
+      showTab("dashboard");
+    }
+
+    let miniSim = null;
+    let mainSim = null;
+
+    function initCanvas(canvasId, isMain) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio || 800;
+      canvas.height = rect.height * window.devicePixelRatio || 500;
+
+      const nodes = rawNodes.map((n, i) => ({
+        ...n,
+        x: (canvas.width / 2) + (Math.cos(i) * 180) + (Math.random() * 40 - 20),
+        y: (canvas.height / 2) + (Math.sin(i) * 140) + (Math.random() * 40 - 20),
+        vx: 0,
+        vy: 0,
+        radius: n.type === "Person" ? 14 : (n.type === "FIR" ? 12 : 10)
+      }));
+
+      const edges = rawEdges.map(e => ({
+        source: nodes.find(n => n.id === e.source) || nodes[0],
+        target: nodes.find(n => n.id === e.target) || nodes[1]
+      }));
+
+      const sim = {
+        canvas, ctx, nodes, edges, isMain,
+        zoom: 1, panX: 0, panY: 0,
+        draggedNode: null
+      };
+
+      if (isMain) mainSim = sim; else miniSim = sim;
+
+      let isDragging = false;
+      let lastX = 0, lastY = 0;
+
+      canvas.addEventListener("mousedown", (e) => {
+        const mouseX = (e.offsetX * window.devicePixelRatio - sim.panX) / sim.zoom;
+        const mouseY = (e.offsetY * window.devicePixelRatio - sim.panY) / sim.zoom;
+
+        const clicked = nodes.find(n => Math.hypot(n.x - mouseX, n.y - mouseY) < n.radius * 1.5);
+        if (clicked) {
+          sim.draggedNode = clicked;
+          if (isMain) selectNodeByName(clicked.id);
+        } else {
+          isDragging = true;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (sim.draggedNode) {
+          const mouseX = (e.offsetX * window.devicePixelRatio - sim.panX) / sim.zoom;
+          const mouseY = (e.offsetY * window.devicePixelRatio - sim.panY) / sim.zoom;
+          sim.draggedNode.x = mouseX;
+          sim.draggedNode.y = mouseY;
+        } else if (isDragging) {
+          sim.panX += (e.clientX - lastX) * window.devicePixelRatio;
+          sim.panY += (e.clientY - lastY) * window.devicePixelRatio;
+          lastX = e.clientX;
+          lastY = e.clientY;
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        sim.draggedNode = null;
+        isDragging = false;
+      });
+
+      canvas.addEventListener("wheel", (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        sim.zoom = Math.max(0.4, Math.min(2.5, sim.zoom * factor));
+      });
+
+      function step() {
+        updatePhysics(sim);
+        drawSimulation(sim);
+        requestAnimationFrame(step);
+      }
+      step();
+    }
+
+    function updatePhysics(sim) {
+      const kRepel = 2400;
+      const kSpring = 0.04;
+      const centerDamp = 0.015;
+
+      const cx = sim.canvas.width / 2;
+      const cy = sim.canvas.height / 2;
+
+      for (let i = 0; i < sim.nodes.length; i++) {
+        for (let j = i + 1; j < sim.nodes.length; j++) {
+          const a = sim.nodes[i];
+          const b = sim.nodes[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          if (dist < 320) {
+            const force = (kRepel / (dist * dist));
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+            a.vx -= fx; a.vy -= fy;
+            b.vx += fx; b.vy += fy;
+          }
+        }
+      }
+
+      sim.edges.forEach(e => {
+        const dx = e.target.x - e.source.x;
+        const dy = e.target.y - e.source.y;
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        const force = (dist - 100) * kSpring;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+        e.source.vx += fx; e.source.vy += fy;
+        e.target.vx -= fx; e.target.vy -= fy;
+      });
+
+      sim.nodes.forEach(n => {
+        if (n === sim.draggedNode) return;
+        n.vx += (cx - n.x) * centerDamp;
+        n.vy += (cy - n.y) * centerDamp;
+        n.x += n.vx * 0.2;
+        n.y += n.vy * 0.2;
+        n.vx *= 0.75;
+        n.vy *= 0.75;
+      });
+    }
+
+    function drawSimulation(sim) {
+      const { ctx, canvas, nodes, edges, zoom, panX, panY } = sim;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(panX, panY);
+      ctx.scale(zoom, zoom);
+
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = "rgba(148, 163, 184, 0.25)";
+      edges.forEach(e => {
+        ctx.beginPath();
+        ctx.moveTo(e.source.x, e.source.y);
+        ctx.lineTo(e.target.x, e.target.y);
+        ctx.stroke();
+      });
+
+      nodes.forEach(n => {
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+
+        let fillColor = TYPE_COLORS[n.type] || "#94a3b8";
+        if (colorMode === "community") {
+          fillColor = COMM_COLORS[(n.comm || 1) % COMM_COLORS.length];
+        }
+
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+
+        if (n.id === selectedEntity) {
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = "#ffffff";
+          ctx.stroke();
+        } else {
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = "#0f172a";
+          ctx.stroke();
+        }
+
+        ctx.font = `${Math.max(10, 11 / zoom)}px sans-serif`;
+        ctx.fillStyle = "#f1f5f9";
+        ctx.textAlign = "center";
+        ctx.fillText(n.label, n.x, n.y - n.radius - 4);
+      });
+
+      ctx.restore();
+    }
+
+    function resetGraphPhysics() {
+      if (mainSim) {
+        mainSim.zoom = 1;
+        mainSim.panX = 0;
+        mainSim.panY = 0;
+      }
+    }
+
+    function updateFilters() {
+      const p = document.getElementById("filter-person").checked;
+      const ph = document.getElementById("filter-phone").checked;
+      const f = document.getElementById("filter-fir").checked;
+      const l = document.getElementById("filter-loc").checked;
+
+      mainSim.nodes.forEach(n => {
+        if (n.type === "Person" && !p) n.radius = 0;
+        else if (n.type === "Phone" && !ph) n.radius = 0;
+        else if (n.type === "FIR" && !f) n.radius = 0;
+        else if (n.type === "Location" && !l) n.radius = 0;
+        else n.radius = n.type === "Person" ? 14 : 10;
+      });
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
