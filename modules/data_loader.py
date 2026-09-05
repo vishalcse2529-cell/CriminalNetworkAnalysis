@@ -35,13 +35,15 @@ def load_fir_data(source: Optional[Union[str, Path, Any]] = None) -> pd.DataFram
         source = DEFAULT_DATA_DIR / "fir_data.csv"
 
     try:
+        # STREAMLIT FIX: Reset the file buffer pointer to the start before reading
+        if hasattr(source, 'seek'):
+            source.seek(0)
+            
         df = pd.read_csv(source)
     except Exception as e:
-        # Fallback to default if custom file fails
-        if source != DEFAULT_DATA_DIR / "fir_data.csv" and (DEFAULT_DATA_DIR / "fir_data.csv").exists():
-            df = pd.read_csv(DEFAULT_DATA_DIR / "fir_data.csv")
-        else:
-            raise RuntimeError(f"Failed to load FIR dataset: {e}")
+        # CRITICAL FIX: Do not silently load local data. 
+        # Raise the error so it prints in the Streamlit UI!
+        raise RuntimeError(f"🚨 Failed to load FIR dataset! Check your CSV format. Exact Error: {e}")
 
     # Column name normalization
     df.columns = [c.strip().lower() for c in df.columns]
@@ -72,12 +74,15 @@ def load_cdr_data(source: Optional[Union[str, Path, Any]] = None) -> pd.DataFram
         source = DEFAULT_DATA_DIR / "cdr_data.csv"
 
     try:
+        # STREAMLIT FIX: Reset the file buffer pointer to the start before reading
+        if hasattr(source, 'seek'):
+            source.seek(0)
+            
         df = pd.read_csv(source)
     except Exception as e:
-        if source != DEFAULT_DATA_DIR / "cdr_data.csv" and (DEFAULT_DATA_DIR / "cdr_data.csv").exists():
-            df = pd.read_csv(DEFAULT_DATA_DIR / "cdr_data.csv")
-        else:
-            raise RuntimeError(f"Failed to load CDR dataset: {e}")
+        # CRITICAL FIX: Do not silently load local data. 
+        # Raise the error so it prints in the Streamlit UI!
+        raise RuntimeError(f"🚨 Failed to load CDR dataset! Check your CSV format. Exact Error: {e}")
 
     df.columns = [c.strip().lower() for c in df.columns]
 
@@ -104,12 +109,15 @@ def load_transaction_data(source: Optional[Union[str, Path, Any]] = None) -> pd.
         source = DEFAULT_DATA_DIR / "transactions.csv"
 
     try:
+        # STREAMLIT FIX: Reset the file buffer pointer to the start before reading
+        if hasattr(source, 'seek'):
+            source.seek(0)
+            
         df = pd.read_csv(source)
     except Exception as e:
-        if source != DEFAULT_DATA_DIR / "transactions.csv" and (DEFAULT_DATA_DIR / "transactions.csv").exists():
-            df = pd.read_csv(DEFAULT_DATA_DIR / "transactions.csv")
-        else:
-            raise RuntimeError(f"Failed to load Transaction dataset: {e}")
+        # CRITICAL FIX: Do not silently load local data. 
+        # Raise the error so it prints in the Streamlit UI!
+        raise RuntimeError(f"🚨 Failed to load Transaction dataset! Check your CSV format. Exact Error: {e}")
 
     df.columns = [c.strip().lower() for c in df.columns]
 

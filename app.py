@@ -388,9 +388,28 @@ elif page == "📁 FIR Analysis":
         fir_file = st.file_uploader("Upload custom FIR CSV", type=["csv"], key="fir_upload")
         if fir_file is not None:
             try:
+                # 1. Load the new data
                 custom_fir = load_fir_data(fir_file)
                 st.session_state["data"]["fir"] = custom_fir
-                st.success(f"Loaded {len(custom_fir)} custom FIRs.")
+                
+                # 2. IMMEDIATELY rebuild the graph and analysis with the new data
+                g = build_network_graph(
+                    st.session_state["data"]["fir"], 
+                    st.session_state["data"]["cdr"], 
+                    st.session_state["data"]["transactions"]
+                )
+                st.session_state["graph"] = g
+                st.session_state["analysis"] = analyze_network(g)
+                st.session_state["patterns"] = detect_all_suspicious_patterns(
+                    st.session_state["data"]["fir"], 
+                    st.session_state["data"]["cdr"], 
+                    st.session_state["data"]["transactions"]
+                )
+                
+                # 3. Notify and refresh the UI
+                st.success(f"Loaded {len(custom_fir)} custom FIRs. Rebuilding network...")
+                st.rerun() # Forces the UI to update with the new graph
+                
             except Exception as ex:
                 st.error(f"Error parsing uploaded CSV: {ex}")
 
@@ -499,7 +518,23 @@ elif page == "📞 CDR Analysis":
             try:
                 custom_cdr = load_cdr_data(cdr_file)
                 st.session_state["data"]["cdr"] = custom_cdr
-                st.success(f"Loaded {len(custom_cdr)} custom CDR records.")
+                
+                # Rebuild graph & analysis
+                g = build_network_graph(
+                    st.session_state["data"]["fir"], 
+                    st.session_state["data"]["cdr"], 
+                    st.session_state["data"]["transactions"]
+                )
+                st.session_state["graph"] = g
+                st.session_state["analysis"] = analyze_network(g)
+                st.session_state["patterns"] = detect_all_suspicious_patterns(
+                    st.session_state["data"]["fir"], 
+                    st.session_state["data"]["cdr"], 
+                    st.session_state["data"]["transactions"]
+                )
+                
+                st.success(f"Loaded {len(custom_cdr)} custom CDR records. Rebuilding network...")
+                st.rerun()
             except Exception as ex:
                 st.error(f"Error parsing CDR CSV: {ex}")
 
