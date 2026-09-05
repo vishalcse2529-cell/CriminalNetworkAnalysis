@@ -386,32 +386,33 @@ elif page == "📁 FIR Analysis":
     with col_u1:
         st.markdown("#### Data Source")
         fir_file = st.file_uploader("Upload custom FIR CSV", type=["csv"], key="fir_upload")
+        
         if fir_file is not None:
-            try:
-                # 1. Load the new data
-                custom_fir = load_fir_data(fir_file)
-                st.session_state["data"]["fir"] = custom_fir
-                
-                # 2. IMMEDIATELY rebuild the graph and analysis with the new data
-                g = build_network_graph(
-                    st.session_state["data"]["fir"], 
-                    st.session_state["data"]["cdr"], 
-                    st.session_state["data"]["transactions"]
-                )
-                st.session_state["graph"] = g
-                st.session_state["analysis"] = analyze_network(g)
-                st.session_state["patterns"] = detect_all_suspicious_patterns(
-                    st.session_state["data"]["fir"], 
-                    st.session_state["data"]["cdr"], 
-                    st.session_state["data"]["transactions"]
-                )
-                
-                # 3. Notify and refresh the UI
-                st.success(f"Loaded {len(custom_fir)} custom FIRs. Rebuilding network...")
-                st.rerun() # Forces the UI to update with the new graph
-                
-            except Exception as ex:
-                st.error(f"Error parsing uploaded CSV: {ex}")
+            # FIX: Only process if we haven't seen this exact file yet!
+            if st.session_state.get("last_uploaded_fir") != fir_file.name:
+                try:
+                    custom_fir = load_fir_data(fir_file)
+                    st.session_state["data"]["fir"] = custom_fir
+                    
+                    g = build_network_graph(
+                        st.session_state["data"]["fir"], 
+                        st.session_state["data"]["cdr"], 
+                        st.session_state["data"]["transactions"]
+                    )
+                    st.session_state["graph"] = g
+                    st.session_state["analysis"] = analyze_network(g)
+                    st.session_state["patterns"] = detect_all_suspicious_patterns(
+                        st.session_state["data"]["fir"], 
+                        st.session_state["data"]["cdr"], 
+                        st.session_state["data"]["transactions"]
+                    )
+                    
+                    # Save the filename so it doesn't loop
+                    st.session_state["last_uploaded_fir"] = fir_file.name
+                    st.success(f"Loaded {len(custom_fir)} custom FIRs. Network rebuilt!")
+                    
+                except Exception as ex:
+                    st.error(f"Error parsing uploaded CSV: {ex}")
 
     fir_df = st.session_state["data"].get("fir", pd.DataFrame())
 
