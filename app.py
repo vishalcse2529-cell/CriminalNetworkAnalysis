@@ -515,30 +515,36 @@ elif page == "📞 CDR Analysis":
     col_u1, col_u2 = st.columns([1, 2])
     with col_u1:
         cdr_file = st.file_uploader("Upload custom CDR CSV", type=["csv"], key="cdr_upload")
+        
         if cdr_file is not None:
-            try:
-                custom_cdr = load_cdr_data(cdr_file)
-                st.session_state["data"]["cdr"] = custom_cdr
-                
-                # Rebuild graph & analysis
-                g = build_network_graph(
-                    st.session_state["data"]["fir"], 
-                    st.session_state["data"]["cdr"], 
-                    st.session_state["data"]["transactions"]
-                )
-                st.session_state["graph"] = g
-                st.session_state["analysis"] = analyze_network(g)
-                st.session_state["patterns"] = detect_all_suspicious_patterns(
-                    st.session_state["data"]["fir"], 
-                    st.session_state["data"]["cdr"], 
-                    st.session_state["data"]["transactions"]
-                )
-                
-                st.success(f"Loaded {len(custom_cdr)} custom CDR records. Rebuilding network...")
-                st.rerun()
-            except Exception as ex:
-                st.error(f"Error parsing CDR CSV: {ex}")
+            # FIX: Prevent infinite loops
+            if st.session_state.get("last_uploaded_cdr") != cdr_file.name:
+                try:
+                    custom_cdr = load_cdr_data(cdr_file)
+                    
+                    # CRITICAL: Ensure it saves to ["cdr"]!
+                    st.session_state["data"]["cdr"] = custom_cdr
+                    
+                    # Rebuild graph & analysis
+                    g = build_network_graph(
+                        st.session_state["data"]["fir"], 
+                        st.session_state["data"]["cdr"], 
+                        st.session_state["data"]["transactions"]
+                    )
+                    st.session_state["graph"] = g
+                    st.session_state["analysis"] = analyze_network(g)
+                    st.session_state["patterns"] = detect_all_suspicious_patterns(
+                        st.session_state["data"]["fir"], 
+                        st.session_state["data"]["cdr"], 
+                        st.session_state["data"]["transactions"]
+                    )
+                    
+                    st.session_state["last_uploaded_cdr"] = cdr_file.name
+                    st.success(f"Loaded {len(custom_cdr)} custom CDR records. Network rebuilt!")
+                except Exception as ex:
+                    st.error(f"Error parsing CDR CSV: {ex}")
 
+    # FETCH FRESH DATA AFTER UPLOAD
     cdr_df = st.session_state["data"].get("cdr", pd.DataFrame())
 
     if cdr_df.empty:
@@ -597,8 +603,7 @@ elif page == "📞 CDR Analysis":
             fig_cdr = create_plotly_network_figure(cdr_G, cdr_analysis, color_by="type")
             fig_cdr.update_layout(height=480)
             st.plotly_chart(fig_cdr, use_container_width=True)
-
-
+            
 # =============================================================================
 # 4. NETWORK ANALYSIS PAGE (PRIMARY FEATURE)
 # =============================================================================
